@@ -1,0 +1,30 @@
+--- src/main/static/startMainProcess.js
++++ src/main/static/startMainProcess.js
+@@ -1,4 +1,19 @@
+ /* eslint-disable no-console */
++
++function patchSnapshot() {
++  var RegistrationHelpers = snapshotResult.customRequire('./src/sharedModules/registration/shared/RegistrationHelpers.js');
++  var { decodeBody } = RegistrationHelpers;
++  RegistrationHelpers.decodeBody = function() {
++    var body = decodeBody(...arguments);
++    body = {
++      ...body,
++      licensedFeatures: ['pro'],
++      proAccessState: {}
++    }
++    return body;
++  }
++}
++
+ (function() {
+   // Webpack will remove the if block when you use process.env.NODE_ENV
+   if (process.env.NODE_ENV === 'development') {
+@@ -34,6 +49,6 @@
+ 
+   global.clientType = clientType;
+   global.mode = buildMode;
+-
++  patchSnapshot();
+   require('../main.js');
+ })();

@@ -1,0 +1,9 @@
+[
+  {
+    "description": "Set run mode to staging",
+    "file": "src/main/static/mode.js",
+    "skipIfPresent": "staging",
+    "find": "module\\.exports = ['\"]production['\"];",
+    "replace": "module.exports = 'staging';"
+  }
+]

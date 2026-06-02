@@ -1,0 +1,16 @@
+[
+  {
+    "description": "Intercept edm-lite-d license response with individual features",
+    "file": "src/renderer/static/index.js",
+    "skipIfPresent": "PatchSnapshot",
+    "find": "(\\(function\\s*\\(\\)\\s*\\{)",
+    "replace": "function PatchSnapshot() {\n  var edmPaths = [\n    '@axosoft/edm-lite-d/src/d.js',\n    '@axosoft/edm-d/src/d.js'\n  ];\n  for (var p of edmPaths) {\n    try {\n      var orig = snapshotResult.customRequire(p);\n      snapshotResult.customRequire.cache[p] = {\n        exports: function() {\n          var raw = orig.apply(this, arguments);\n          try {\n            var response = JSON.parse(raw.toString('utf8'));\n            if ('licenseExpiresAt' in response || 'licensedFeatures' in response) {\n              response = Object.assign({}, response, {\n                availableTrialDays: null,\n                licenseExpiresAt: 8640000000000000,\n                licensedFeatures: ['individual']\n              });\n            }\n            return Buffer.from(JSON.stringify(response), 'utf8');\n          } catch(e) { return raw; }\n        }\n      };\n    } catch(e) {}\n  }\n}\n\n$1"
+  },
+  {
+    "description": "Call PatchSnapshot at renderer bootstrap",
+    "file": "src/renderer/static/index.js",
+    "skipIfPresent": "PatchSnapshot();",
+    "find": "(\\(function\\s*\\(\\)\\s*\\{\\s*\n)",
+    "replace": "$1  PatchSnapshot();\n"
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "description": "Set clientType to STANDALONE",
+    "file": "src/main/static/clientType.js",
+    "skipIfPresent": "STANDALONE",
+    "find": "module\\.exports = ['\"]NORMAL['\"];",
+    "replace": "module.exports = 'STANDALONE';"
+  },
+  {
+    "description": "Inject enterprise license into snapshot before main.js",
+    "file": "src/main/static/startMainProcess.js",
+    "skipIfPresent": "PatchSnapshot",
+    "find": "(\\(function\\s*\\(\\)\\s*\\{)",
+    "replace": "function PatchSnapshot() {\n  var edmPaths = [\n    '@axosoft/edm-d/src/d.js',\n    '@axosoft/edm-lite-d/src/d.js'\n  ];\n  for (var p of edmPaths) {\n    try {\n      snapshotResult.customRequire.cache[p] = {\n        exports: () => Promise.resolve({\n          expiresAt: 8640000000000000,\n          quantity: Number.MAX_SAFE_INTEGER,\n          licensedFeatures: ['enterprise', 'pro', 'advanced', 'teamsLicense'],\n          proAccessState: {},\n          subscriber: { name: 'vortextools' }\n        })\n      };\n    } catch(e) {}\n  }\n}\n\n$1"
+  },
+  {
+    "description": "Call PatchSnapshot before main.js require",
+    "file": "src/main/static/startMainProcess.js",
+    "skipIfPresent": "PatchSnapshot();",
+    "find": "(require\\(['\"]\\.\\.\/main\\.js['\"]\\);)",
+    "replace": "PatchSnapshot();\n  $1"
+  }
+]

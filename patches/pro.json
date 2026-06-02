@@ -1,0 +1,33 @@
+[
+  {
+    "description": "Inject patchSnapshot() into startMainProcess.js (pre-12.x)",
+    "file": "src/main/static/startMainProcess.js",
+    "skipIfPresent": "patchSnapshot",
+    "required": false,
+    "find": "(\\(function\\(\\)\\s*\\{)",
+    "replace": "function patchSnapshot() {\n  var paths = [\n    './src/sharedModules/registration/shared/RegistrationHelpers.js',\n    './src/main/registration/shared/RegistrationHelpers.js',\n    './src/sharedModules/registration/RegistrationHelpers.js'\n  ];\n  var RegistrationHelpers;\n  for (var p of paths) {\n    try { RegistrationHelpers = snapshotResult.customRequire(p); break; } catch(e) {}\n  }\n  if (!RegistrationHelpers || !RegistrationHelpers.decodeBody) return;\n  var _decodeBody = RegistrationHelpers.decodeBody;\n  RegistrationHelpers.decodeBody = function() {\n    var body = _decodeBody.apply(this, arguments);\n    if (!body) return body;\n    return Object.assign({}, body, {\n      licensedFeatures: ['enterprise', 'pro', 'advanced', 'teamsLicense'],\n      proAccessState: {}\n    });\n  };\n}\n\n$1"
+  },
+  {
+    "description": "Call patchSnapshot() before main.js require (pre-12.x)",
+    "file": "src/main/static/startMainProcess.js",
+    "skipIfPresent": "patchSnapshot();",
+    "required": false,
+    "find": "(require\\(['\"]\\.\\.[\\/]main\\.js['\"]\\);)",
+    "replace": "patchSnapshot();\n  $1"
+  },
+  {
+    "description": "Override licensedFeatures in decodeBody normal-client path (12.x)",
+    "file": "src/main/static/main.bundle.js",
+    "skipIfPresent": "enterprise\",\"pro\",\"advanced\",\"teamsLicense\"",
+    "find": "return JSON\\.parse\\(\\(0,ae\\.default\\)\\(Buffer\\.from\\(se,\"base64\"\\)\\.toString\\(\"utf8\"\\),Buffer\\.from\\(ie\\.secure,\"base64\"\\)\\)\\.toString\\(\"utf8\"\\)\\)\\}",
+    "replace": "return Object.assign({},JSON.parse((0,ae.default)(Buffer.from(se,\"base64\").toString(\"utf8\"),Buffer.from(ie.secure,\"base64\")).toString(\"utf8\")),{licensedFeatures:[\"enterprise\",\"pro\",\"advanced\",\"teamsLicense\"],proAccessState:{}})}"
+  },
+  {
+    "description": "Override licensedFeatures in decodeBody non-normal-client path (12.x)",
+    "file": "src/main/static/main.bundle.js",
+    "skipIfPresent": "if(!B)return Object.assign",
+    "required": false,
+    "find": "if\\(!B\\)return ie;const se=",
+    "replace": "if(!B)return Object.assign({},ie,{licensedFeatures:[\"enterprise\",\"pro\",\"advanced\",\"teamsLicense\"],proAccessState:{}});const se="
+  }
+]

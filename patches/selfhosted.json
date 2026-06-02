@@ -1,0 +1,9 @@
+[
+  {
+    "description": "Set clientType to ENTERPRISE (self-hosted)",
+    "file": "src/main/static/clientType.js",
+    "skipIfPresent": "ENTERPRISE",
+    "find": "module\\.exports = ['\"]NORMAL['\"];",
+    "replace": "module.exports = 'ENTERPRISE';"
+  }
+]
