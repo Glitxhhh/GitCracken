@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "private": true,
-  "homepage": "https://pastebin.com/u/KillWolfVlad",
+  "homepage": "https://github.com/Glitxhhh/GitCracken",
   "main": "dist/index.js",
   "bin": {
     "gitcracken": "dist/bin/gitcracken.js"

@@ -54,36 +54,64 @@ try {
 
 # ── Install dependencies ───────────────────────────────────────────────────────
 Title "Installing dependencies"
-Push-Location $Root
-try {
-    if ($pm -eq "yarn") {
-        yarn install --frozen-lockfile 2>&1
-    } else {
-        npm install 2>&1
+$nmDir = Join-Path $Root "node_modules"
+$installedMarker = if ($pm -eq "yarn") {
+    Join-Path $nmDir ".yarn-integrity"
+} else {
+    Join-Path $nmDir ".package-lock.json"
+}
+$pkgJson     = Join-Path $Root "package.json"
+$needsInstall = (-not (Test-Path $installedMarker)) -or
+                ((Get-Item $pkgJson).LastWriteTime -gt (Get-Item $installedMarker).LastWriteTime)
+
+if (-not $needsInstall) {
+    Ok "Dependencies already up to date (skipping install)"
+} else {
+    Push-Location $Root
+    try {
+        if ($pm -eq "yarn") {
+            yarn install --frozen-lockfile 2>&1
+        } else {
+            npm install 2>&1
+        }
+        if ($LASTEXITCODE -ne 0) { Err "Dependency install failed (exit $LASTEXITCODE)" }
+        Ok "Dependencies installed"
+    } catch {
+        Err "Dependency install failed: $_"
+    } finally {
+        Pop-Location
     }
-    if ($LASTEXITCODE -ne 0) { Err "Dependency install failed (exit $LASTEXITCODE)" }
-    Ok "Dependencies installed"
-} catch {
-    Err "Dependency install failed: $_"
-} finally {
-    Pop-Location
 }
 
 # ── Build TypeScript ───────────────────────────────────────────────────────────
 Title "Building"
-Push-Location $Root
-try {
-    if ($pm -eq "yarn") {
-        yarn build 2>&1
-    } else {
-        npm run build 2>&1
+$distEntry = Join-Path $Root "dist\bin\gitcracken.js"
+$needsBuild = -not (Test-Path $distEntry)
+if (-not $needsBuild) {
+    $distTime = (Get-Item $distEntry).LastWriteTime
+    $staleTs  = Get-ChildItem $Root -Recurse -Include "*.ts" -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -notmatch '\\node_modules\\' } |
+                Where-Object { $_.LastWriteTime -gt $distTime }
+    $needsBuild = @($staleTs).Count -gt 0
+}
+
+if (-not $needsBuild) {
+    Ok "Build already up to date (skipping build)"
+} else {
+    Push-Location $Root
+    try {
+        if ($pm -eq "yarn") {
+            yarn build 2>&1
+        } else {
+            npm run build 2>&1
+        }
+        if ($LASTEXITCODE -ne 0) { Err "Build failed (exit $LASTEXITCODE)" }
+        Ok "Build complete"
+    } catch {
+        Err "Build failed: $_"
+    } finally {
+        Pop-Location
     }
-    if ($LASTEXITCODE -ne 0) { Err "Build failed (exit $LASTEXITCODE)" }
-    Ok "Build complete"
-} catch {
-    Err "Build failed: $_"
-} finally {
-    Pop-Location
 }
 
 # ── Run patcher ────────────────────────────────────────────────────────────────
@@ -94,7 +122,8 @@ if (-not (Test-Path $script)) {
     Err "Build output not found at $script — did the build step fail?"
 }
 
-$patcherArgs = @("patcher", "-f", $Feature)
+$patcherArgs  = @("patcher", "-f", $Feature)
+$resolvedAsar = $Asar   # will be overwritten by auto-detect branch if needed
 if ($Asar -ne "") {
     Info "Using custom asar: $Asar"
     $patcherArgs += @("-a", $Asar)
@@ -124,7 +153,27 @@ if ($Asar -ne "") {
     if (-not $detectedAsar) {
         Err "Could not find app.asar in any known GitKraken install path. Pass -Asar explicitly."
     }
-    $patcherArgs += @("-a", $detectedAsar)
+    $patcherArgs  += @("-a", $detectedAsar)
+    $resolvedAsar  = $detectedAsar
+}
+
+# ── Check if already patched ───────────────────────────────────────────────────
+# The patcher always creates app.asar.<timestamp>.backup before modifying the asar.
+# If one exists we know the asar has been patched at least once.
+$asarDir = Split-Path $resolvedAsar -Parent
+$backups = Get-ChildItem $asarDir -Filter "app.asar.*.backup" -ErrorAction SilentlyContinue
+if ($backups) {
+    $latestBackup = ($backups | Sort-Object LastWriteTime -Descending | Select-Object -First 1).Name
+    Info "Existing patch backup found: $latestBackup"
+    $resp = Read-Host "  --> GitKraken appears already patched. Re-patch anyway? (y/N)"
+    if ($resp -notmatch '^[yY]$') {
+        Write-Host "`nSkipping — GitKraken is already patched." -ForegroundColor Yellow
+        Write-Host "Log saved to: $LogFile" -ForegroundColor Yellow
+        Stop-Transcript | Out-Null
+        Read-Host "`nPress Enter to close"
+        exit 0
+    }
+    Info "Re-patching..."
 }
 
 try {
