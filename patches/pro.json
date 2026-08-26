@@ -12,7 +12,7 @@
     "file": "src/main/static/startMainProcess.js",
     "skipIfPresent": "patchSnapshot();",
     "required": false,
-    "find": "(require\\(['\"]\\.\\.[\\/]main\\.js['\"]\\);)",
+    "find": "(require\\(['\"]\\.\\.[\\/]main(?:\\.js)?['\"]\\);)",
     "replace": "patchSnapshot();\n  $1"
   },
   {
