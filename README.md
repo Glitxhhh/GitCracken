@@ -68,7 +68,7 @@ After it finishes — re-launch GitKraken and re-login to activate the license.
 |---|---|
 | 7.7.0 – 8.2.2 | ✔ original diffs |
 | 9.x – 11.x | ✔ regex patches |
-| 12.0 – 12.2.x | ✔ regex patches |
+| 12.0 – 12.4.x | ✔ regex patches |
 
 ## Troubleshooting
 
