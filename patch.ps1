@@ -12,8 +12,26 @@ param(
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding          = [System.Text.Encoding]::UTF8
 
+# ── One-liner mode (iwr url | iex) ────────────────────────────────────────────
+# $PSScriptRoot is empty when the script is piped via iex rather than run from disk.
+if (-not $PSScriptRoot) {
+    $tmpBase = Join-Path $env:TEMP "gitcracken-$(Get-Random)"
+    $zipFile = "$tmpBase.zip"
+    Write-Host "Downloading GitCracken..." -ForegroundColor Cyan
+    Invoke-WebRequest -Uri "https://github.com/Glitxhhh/GitCracken/archive/refs/heads/dev.zip" `
+                      -OutFile $zipFile -UseBasicParsing
+    Expand-Archive -Path $zipFile -DestinationPath $tmpBase -Force
+    Remove-Item $zipFile -Force -ErrorAction SilentlyContinue
+    $repoDir = (Get-ChildItem $tmpBase -Directory | Select-Object -First 1).FullName
+    $passArgs = @{ Feature = $Feature }
+    if ($Asar) { $passArgs['Asar'] = $Asar }
+    & "$repoDir\patch.ps1" @passArgs
+    Remove-Item $tmpBase -Recurse -Force -ErrorAction SilentlyContinue
+    exit
+}
+
 $ErrorActionPreference = "Stop"
-$Root    = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Root    = $PSScriptRoot
 $LogFile = Join-Path $Root "patch.log"
 
 # Start capturing everything to patch.log
@@ -98,12 +116,15 @@ if (-not $needsBuild) {
 if (-not $needsBuild) {
     Ok "Build already up to date (skipping build)"
 } else {
+    $distDir = Join-Path $Root "dist"
+    if (Test-Path $distDir) { Remove-Item $distDir -Recurse -Force -ErrorAction SilentlyContinue }
     Push-Location $Root
     try {
         if ($pm -eq "yarn") {
             yarn build 2>&1
         } else {
-            npm run build 2>&1
+            $tscScript = Join-Path $Root "node_modules\typescript\bin\tsc"
+            & node $tscScript 2>&1 | ForEach-Object { Write-Host $_ }
         }
         if ($LASTEXITCODE -ne 0) { Err "Build failed (exit $LASTEXITCODE)" }
         Ok "Build complete"

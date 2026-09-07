@@ -1,6 +1,22 @@
 [
   {
-    "description": "Set clientType to ENTERPRISE (self-hosted)",
+    "description": "Enable enterprise mode flag in enterprise.js (GK 2.x - 5.x)",
+    "file": "src/appBootstrap/enterprise.js",
+    "required": false,
+    "skipIfPresent": "module.exports = true",
+    "find": "module\\.exports = false;",
+    "replace": "module.exports = true;"
+  },
+  {
+    "description": "Set clientType to ENTERPRISE (GK <= 6.5.x path)",
+    "file": "static/clientType.js",
+    "required": false,
+    "skipIfPresent": "ENTERPRISE",
+    "find": "module\\.exports = ['\"]NORMAL['\"];",
+    "replace": "module.exports = 'ENTERPRISE';"
+  },
+  {
+    "description": "Set clientType to ENTERPRISE (GK 7.x+ path)",
     "file": "src/main/static/clientType.js",
     "skipIfPresent": "ENTERPRISE",
     "find": "module\\.exports = ['\"]NORMAL['\"];",

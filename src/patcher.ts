@@ -23,8 +23,18 @@ export interface IRegexPatch {
   replace: string;
   /** If this string is already present in the file, skip the patch */
   skipIfPresent?: string;
-  /** If false, log a warning instead of throwing when the pattern is not found (default: true) */
+  /**
+   * If false, log a warning instead of throwing when the pattern is not found (default: true).
+   * Also controls file-not-found behaviour unless skipIfFileMissing is set.
+   */
   required?: boolean;
+  /**
+   * If true, silently skip this patch when the target file does not exist, regardless of `required`.
+   * Lets a patch fail loudly when the file IS present but the regex doesn't match (e.g. GK updated
+   * and changed variable names) while still being safely ignored on older GK versions that don't
+   * ship the file at all.
+   */
+  skipIfFileMissing?: boolean;
 }
 
 /**
@@ -166,6 +176,10 @@ export class Patcher {
   private applyRegexPatch(patch: IRegexPatch): void {
     const filePath = path.join(this.dir, patch.file);
     if (!fs.existsSync(filePath)) {
+      if (patch.skipIfFileMissing || patch.required === false) {
+        console.warn(`  [warn] Target file not found (skipped): ${patch.file}`);
+        return;
+      }
       throw new Error(`Patch target not found: ${patch.file}`);
     }
     let source = fs.readFileSync(filePath, "utf8");

@@ -1,6 +1,38 @@
 [
   {
-    "description": "Inject patchSnapshot() into startMainProcess.js (pre-12.x)",
+    "description": "Override licenseExpiresAt in RegistrationActions.js (GK 2.x - 5.x)",
+    "file": "src/js/actions/RegistrationActions.js",
+    "required": false,
+    "skipIfPresent": "8640000000000000",
+    "find": "(var _body\\$licenseExpiresA = )body\\.licenseExpiresAt;",
+    "replace": "$1new Date(8640000000000000).toISOString();"
+  },
+  {
+    "description": "Override licensedFeatures in RegistrationActions.js (GK 2.x - 5.x)",
+    "file": "src/js/actions/RegistrationActions.js",
+    "required": false,
+    "skipIfPresent": "['pro']",
+    "find": "(var _body\\$licensedFeature = )body\\.licensedFeatures;",
+    "replace": "$1['pro'];"
+  },
+  {
+    "description": "PatchSnapshot via static/index.js renderer entry (GK <= 6.5.x)",
+    "file": "static/index.js",
+    "required": false,
+    "skipIfPresent": "PatchSnapshot",
+    "find": "(\\(function\\(\\)\\s*\\{)",
+    "replace": "function PatchSnapshot() {\n  const edmLiteD = snapshotResult.customRequire('@axosoft/edm-lite-d/src/d.js');\n  snapshotResult.customRequire.cache['@axosoft/edm-lite-d/src/d.js'] = {\n    exports: function() {\n      let response = JSON.parse(edmLiteD(...arguments).toString('utf8'));\n      if ('licenseExpiresAt' in response || 'licensedFeatures' in response) {\n        response = Object.assign({}, response, {\n          availableTrialDays: null,\n          licenseExpiresAt: 8640000000000000,\n          licensedFeatures: ['enterprise', 'pro', 'advanced', 'teamsLicense']\n        });\n      }\n      return Buffer.from(JSON.stringify(response), 'utf8');\n    }\n  };\n}\n\n$1\n  PatchSnapshot();\n"
+  },
+  {
+    "description": "PatchSnapshot via render/index.js renderer entry (GK 7.0.x - 7.5.x)",
+    "file": "src/render/static/entryPoints/main/index.js",
+    "required": false,
+    "skipIfPresent": "PatchSnapshot",
+    "find": "(\\(function\\(\\)\\s*\\{)",
+    "replace": "function PatchSnapshot() {\n  const edmLiteD = snapshotResult.customRequire('@axosoft/edm-lite-d/src/d.js');\n  snapshotResult.customRequire.cache['@axosoft/edm-lite-d/src/d.js'] = {\n    exports: function() {\n      let response = JSON.parse(edmLiteD(...arguments).toString('utf8'));\n      if ('licenseExpiresAt' in response || 'licensedFeatures' in response) {\n        response = Object.assign({}, response, {\n          availableTrialDays: null,\n          licenseExpiresAt: 8640000000000000,\n          licensedFeatures: ['enterprise', 'pro', 'advanced', 'teamsLicense']\n        });\n      }\n      return Buffer.from(JSON.stringify(response), 'utf8');\n    }\n  };\n}\n\n$1\n  PatchSnapshot();\n"
+  },
+  {
+    "description": "Inject patchSnapshot() into startMainProcess.js (GK 7.6.x - 11.x)",
     "file": "src/main/static/startMainProcess.js",
     "skipIfPresent": "patchSnapshot",
     "required": false,
@@ -8,7 +40,7 @@
     "replace": "function patchSnapshot() {\n  var paths = [\n    './src/sharedModules/registration/shared/RegistrationHelpers.js',\n    './src/main/registration/shared/RegistrationHelpers.js',\n    './src/sharedModules/registration/RegistrationHelpers.js'\n  ];\n  var RegistrationHelpers;\n  for (var p of paths) {\n    try { RegistrationHelpers = snapshotResult.customRequire(p); break; } catch(e) {}\n  }\n  if (!RegistrationHelpers || !RegistrationHelpers.decodeBody) return;\n  var _decodeBody = RegistrationHelpers.decodeBody;\n  RegistrationHelpers.decodeBody = function() {\n    var body = _decodeBody.apply(this, arguments);\n    if (!body) return body;\n    return Object.assign({}, body, {\n      licensedFeatures: ['enterprise', 'pro', 'advanced', 'teamsLicense'],\n      proAccessState: {}\n    });\n  };\n}\n\n$1"
   },
   {
-    "description": "Call patchSnapshot() before main.js require (pre-12.x)",
+    "description": "Call patchSnapshot() before main.js require (GK 7.6.x - 11.x)",
     "file": "src/main/static/startMainProcess.js",
     "skipIfPresent": "patchSnapshot();",
     "required": false,
@@ -16,18 +48,18 @@
     "replace": "patchSnapshot();\n  $1"
   },
   {
-    "description": "Override licensedFeatures in decodeBody normal-client path (12.x)",
+    "description": "Override licensedFeatures in decodeBody normal-client path (GK 12.x)",
     "file": "src/main/static/main.bundle.js",
-    "skipIfPresent": "enterprise\",\"pro\",\"advanced\",\"teamsLicense\"",
-    "find": "return JSON\\.parse\\(\\(0,ae\\.default\\)\\(Buffer\\.from\\(se,\"base64\"\\)\\.toString\\(\"utf8\"\\),Buffer\\.from\\(ie\\.secure,\"base64\"\\)\\)\\.toString\\(\"utf8\"\\)\\)\\}",
-    "replace": "return Object.assign({},JSON.parse((0,ae.default)(Buffer.from(se,\"base64\").toString(\"utf8\"),Buffer.from(ie.secure,\"base64\")).toString(\"utf8\")),{licensedFeatures:[\"enterprise\",\"pro\",\"advanced\",\"teamsLicense\"],proAccessState:{}})}"
+    "skipIfPresent": "Object.assign({},JSON.parse((0,",
+    "skipIfFileMissing": true,
+    "find": "return JSON\\.parse\\(\\(0,([a-z]+)\\.default\\)\\(Buffer\\.from\\(([a-z]+),\"base64\"\\)\\.toString\\(\"utf8\"\\),Buffer\\.from\\(([a-z]+)\\.secure,\"base64\"\\)\\)\\.toString\\(\"utf8\"\\)\\)\\}",
+    "replace": "return Object.assign({},JSON.parse((0,$1.default)(Buffer.from($2,\"base64\").toString(\"utf8\"),Buffer.from($3.secure,\"base64\")).toString(\"utf8\")),{licensedFeatures:[\"enterprise\",\"pro\",\"advanced\",\"teamsLicense\"],proAccessState:{}})}"
   },
   {
-    "description": "Override licensedFeatures in decodeBody non-normal-client path (12.x)",
+    "description": "Override licensedFeatures in decodeBody non-normal-client path (GK 12.x)",
     "file": "src/main/static/main.bundle.js",
-    "skipIfPresent": "if(!B)return Object.assign",
-    "required": false,
-    "find": "if\\(!B\\)return ie;const se=",
-    "replace": "if(!B)return Object.assign({},ie,{licensedFeatures:[\"enterprise\",\"pro\",\"advanced\",\"teamsLicense\"],proAccessState:{}});const se="
+    "skipIfFileMissing": true,
+    "find": "([a-z]+\\.decodeBody=\\([a-z]+,[a-z]+,[a-z]+\\)=>\\{if\\(![a-z]+\\)return )([a-z]+)(;)",
+    "replace": "$1Object.assign({},$2,{licensedFeatures:[\"enterprise\",\"pro\",\"advanced\",\"teamsLicense\"],proAccessState:{}})$3"
   }
 ]

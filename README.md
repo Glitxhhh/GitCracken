@@ -4,22 +4,32 @@ GitKraken patcher for non-commercial use. Works on Windows, Linux, macOS.
 
 ## Quick start
 
-### Windows
+### Windows — one-liner (no clone needed)
 
 ```powershell
-# 1. Extract this zip somewhere, e.g. C:\Tools\GitCracken
-# 2. Open PowerShell in that folder and run:
-.\patch.ps1
-
-# If PowerShell blocks the script, run this first:
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+iwr -useb https://raw.githubusercontent.com/Glitxhhh/GitCracken/dev/patch.ps1 | iex
 ```
 
-### Linux / macOS
+> If PowerShell blocks scripts, run this first, then retry:
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+> ```
+
+### Linux / macOS — one-liner (no clone needed)
 
 ```bash
-# 1. Extract this zip somewhere
-# 2. Open a terminal in that folder and run:
+curl -sL https://raw.githubusercontent.com/Glitxhhh/GitCracken/dev/patch.sh | bash
+```
+
+### Run from a local clone
+
+```powershell
+# Windows
+.\patch.ps1
+```
+
+```bash
+# Linux / macOS
 chmod +x patch.sh && ./patch.sh
 ```
 
@@ -66,9 +76,15 @@ After it finishes — re-launch GitKraken and re-login to activate the license.
 
 | Version range | Status |
 |---|---|
-| 7.7.0 – 8.2.2 | ✔ original diffs |
-| 9.x – 11.x | ✔ regex patches |
-| 12.0 – 12.4.x | ✔ regex patches |
+| 2.1.0 – 5.x | ✔ best-effort — direct `RegistrationActions.js` + `enterprise.js` patch |
+| 6.5.x | ✔ best-effort — renderer EDM hook (`static/index.js`) |
+| 7.0.x – 7.5.x | ✔ best-effort — renderer EDM hook (`render/index.js`) |
+| 7.6.1 – 11.x | ✔ regex patches — `startMainProcess.js` + `RegistrationHelpers.decodeBody` |
+| 12.0 – 12.4.0 | ✔ regex patches (fixed variable names in `main.bundle.js`) |
+| 12.4.1 – ??? | ✔ flexible regex (capture groups, survives minifier reshuffles) |
+
+> **Best-effort** rows apply patches derived from historical diffs that have not been
+> re-tested in this fork. If patching fails, pass `-a` to point at your asar and open an issue.
 
 ## Troubleshooting
 

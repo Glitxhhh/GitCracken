@@ -1,6 +1,14 @@
 [
   {
-    "description": "Set run mode to development",
+    "description": "Set run mode to development (GK <= 6.5.x path)",
+    "file": "static/mode.js",
+    "required": false,
+    "skipIfPresent": "development",
+    "find": "module\\.exports = ['\"]production['\"];",
+    "replace": "module.exports = 'development';"
+  },
+  {
+    "description": "Set run mode to development (GK 7.x+ path)",
     "file": "src/main/static/mode.js",
     "skipIfPresent": "development",
     "find": "module\\.exports = ['\"]production['\"];",
