@@ -113,3 +113,21 @@ Add to your hosts file to prevent GitKraken from overwriting the patch:
 ```
 0.0.0.0 release.gitkraken.com
 ```
+
+---
+
+## Maintenance note
+
+The original [happyhope/GitCracken](https://github.com/happyhope/GitCracken) project was
+abandoned after GitKraken 9.x. This fork was revived and updated by
+[@Glitxhhh](https://github.com/Glitxhhh) with the help of
+[Claude](https://claude.ai) (Anthropic's AI assistant), which:
+
+- Updated the patcher engine to support GK 12.x (`main.bundle.js` regex, flexible capture groups)
+- Restored legacy patch coverage for GK 2.x–11.x across all six features
+- Rewrote the one-liner install scripts (`patch.ps1`, `patch.sh`)
+- Fixed silent-success bugs where the patcher exited 0 without applying any changes
+- Resolved all dependency security vulnerabilities
+
+A `CLAUDE.md` in the root of this repo documents the architecture and patch
+approach for future contributors — human or AI.
