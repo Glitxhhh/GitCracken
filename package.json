@@ -14,11 +14,10 @@
   "scripts": {
     "build": "tsc",
     "gitcracken": "node dist/bin/gitcracken.js",
-    "gitcracken:dev": "node $NODE_DEBUG_OPTION -r ts-node/register bin/gitcracken.ts",
-    "lint": "tslint -p tsconfig.json"
+    "gitcracken:dev": "node $NODE_DEBUG_OPTION -r ts-node/register bin/gitcracken.ts"
   },
   "dependencies": {
-    "@electron/asar": "^3.2.0",
+    "@electron/asar": "^4.3.1",
     "chalk": "^4.1.2",
     "commander": "^9.5.0",
     "diff": "^5.1.0",
@@ -26,22 +25,16 @@
     "fs-extra": "^11.1.0",
     "getmac": "^5.12.0",
     "natsort": "^2.0.3",
-    "node-emoji": "^1.11.0",
+    "node-emoji": "^2.2.0",
     "pkg-dir": "^5.0.0",
-    "uuid": "^9.0.0"
+    "uuid": "^14.0.2"
   },
   "devDependencies": {
     "@types/diff": "^5.0.0",
     "@types/figlet": "^1.5.0",
     "@types/fs-extra": "^11.0.0",
     "@types/node": "^18.0.0",
-    "@types/node-emoji": "^1.8.2",
-    "@types/uuid": "^9.0.0",
-    "prettier": "^2.8.0",
     "ts-node": "^10.9.0",
-    "tslint": "^6.1.3",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-plugin-prettier": "^2.3.0",
     "typescript": "^5.0.0"
   },
   "files": [
